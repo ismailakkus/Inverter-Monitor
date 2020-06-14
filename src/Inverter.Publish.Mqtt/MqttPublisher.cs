@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -14,11 +15,15 @@ namespace Inverter.Publish.Mqtt
     {
         private readonly IApplicationMessagePublisher _client;
         private readonly MqttPublishSettings _settings;
+        private readonly Action<Inverter, Measurement, Exception>? _publishFailed;
 
-        public MqttPublisher(IApplicationMessagePublisher client, MqttPublishSettings settings)
+        public MqttPublisher(IApplicationMessagePublisher client, 
+                             MqttPublishSettings settings,
+                             Action<Inverter, Measurement, Exception>? publishFailed = null)
         {
             _client = client;
             _settings = settings;
+            _publishFailed = publishFailed;
         }
 
         public async Task Publish(Inverter inverter, Measurement measurement, CancellationToken cancellationToken)
@@ -33,7 +38,14 @@ namespace Inverter.Publish.Mqtt
                                       measurement.CreatedAt.ToString("o"))
                            };
 
-            await Task.WhenAll(messages.Select(message => _client.PublishAsync(message, cancellationToken))).ConfigureAwait(false);
+            try
+            {
+                await Task.WhenAll(messages.Select(message => _client.PublishAsync(message, cancellationToken))).ConfigureAwait(false);
+            }
+            catch(Exception exception)
+            {
+                _publishFailed?.Invoke(inverter, measurement, exception);
+            }
 
             static MqttApplicationMessage Create(string topic, string body)
                 => new MqttApplicationMessageBuilder().WithTopic(topic)

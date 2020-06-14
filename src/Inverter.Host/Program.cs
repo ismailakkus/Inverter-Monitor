@@ -40,23 +40,6 @@ namespace Inverter.Host
             }
         }
 
-        private static ILogger BuildLogger(LoggingSettings settings = null)
-        {
-            settings ??= new LoggingSettings();
-
-            var configuration = new LoggerConfiguration()
-                                .Enrich.FromLogContext()
-                                .MinimumLevel.Information()
-                                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
-
-            if(settings.EnableFileLogging)
-                configuration.WithFileLogging(loggingFileBasePath, settings.FileLoggingSettings);
-            if(settings.EnableConsoleLogging)
-                configuration.WithConsoleLogging(settings.ConsoleLoggingSettings);
-
-            return Log.Logger = configuration.CreateLogger();
-        }
-
         private static IHostBuilder CreateHostBuilder(string[] args) =>
             Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
                      .ConfigureHostConfiguration(builder =>
@@ -78,11 +61,32 @@ namespace Inverter.Host
                                             var mqttClient = mqttPublisherFactory.ManagedMqttClient().GetAwaiter().GetResult();
 
                                             services.AddSingleton(provider => GoodWeInvertersFactory.Build(settings.GoodWeSettings,
-                                                                                                           new Observe {LogAuthentication = () => logger.Information("Authenticating against GoodWe api")},
+                                                                                                           new Observe
+                                                                                                           {
+                                                                                                               LogAuthentication = () => logger.Information("Authenticating against GoodWe api"),
+                                                                                                               OnRetry = (result, attempt, timeSpan) => logger.Warning("retrying {attempt} {delay}", attempt, timeSpan)
+                                                                                                           },
                                                                                                            () => DateTimeOffset.UtcNow));
                                             services.AddTransient<IPublisher, LoggingPublisher>();
                                             services.AddSingleton(provider => mqttPublisherFactory.Build(mqttClient));
                                             services.AddHostedService(provider => new Service(provider.GetService<Inverters>(), provider.GetServices<IPublisher>(), settings.ServiceSettings));
                                         });
+
+        private static ILogger BuildLogger(LoggingSettings settings = null)
+        {
+            settings ??= new LoggingSettings();
+
+            var configuration = new LoggerConfiguration()
+                                .Enrich.FromLogContext()
+                                .MinimumLevel.Information()
+                                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+
+            if(settings.EnableFileLogging)
+                configuration = configuration.WithFileLogging(loggingFileBasePath, settings.FileLoggingSettings);
+            if(settings.EnableConsoleLogging)
+                configuration = configuration.WithConsoleLogging(settings.ConsoleLoggingSettings);
+
+            return Log.Logger = configuration.CreateLogger();
+        }
     }
 }
