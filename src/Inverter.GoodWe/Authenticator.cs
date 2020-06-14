@@ -10,6 +10,7 @@ namespace Inverter.GoodWe
 {
     internal class Authenticator
     {
+        private const int authenticationErrorCode = 100005;
         private readonly Action _authenticate;
         private readonly Func<DateTimeOffset> _dateTimeProvider;
         private readonly Func<Uri, dynamic, Data, Task<IRestResponse>> _requestFactory;
@@ -50,7 +51,7 @@ namespace Inverter.GoodWe
                              .ConfigureAwait(false);
             _response = LoginResponse.From(result.Content);
 
-            if(_response.hasError)
+            if(_response.hasError || _response.code == authenticationErrorCode)
                 throw AuthenticationFailed.Create(_response);
 
             return (_response.data, _response.api);

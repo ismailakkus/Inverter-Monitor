@@ -54,7 +54,7 @@ namespace Inverter.GoodWe
 
             return response.data.Select(From).ToList();
 
-            static Inverter From(Datum datum) 
+            static Inverter From(Datum datum)
                 => new Inverter(datum.powerstation_id);
         }
 
@@ -65,7 +65,7 @@ namespace Inverter.GoodWe
             const string method = "v1/PowerStation/GetMonitorDetailByPowerstationId";
             var uri = new Uri($"{baseUri}{method}");
             var response = await Execute(uri, new {powerStationId}, token).ConfigureAwait(false);
-            
+
             return PowerStationResponse.From(response.Content);
         }
 
@@ -86,7 +86,7 @@ namespace Inverter.GoodWe
                               powerstation_type = ""
                           };
             var response = await Execute(uri, payload, token).ConfigureAwait(false);
-            
+
             return SystemResponse.From(response.Content);
         }
 
