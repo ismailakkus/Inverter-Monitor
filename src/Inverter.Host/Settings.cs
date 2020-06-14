@@ -10,6 +10,7 @@ namespace Inverter.Host
         public GoodWeSettings GoodWeSettings { get; set; } = new GoodWeSettings();
         public ServiceSettings ServiceSettings { get; set; } = new ServiceSettings();
         public MqttPublisherSettings MqttPublisherSettings { get; set; } = new MqttPublisherSettings();
+        public LoggingSettings LoggerSettings { get; set; } = new LoggingSettings();
 
         public static Settings From(IConfiguration configuration)
         {

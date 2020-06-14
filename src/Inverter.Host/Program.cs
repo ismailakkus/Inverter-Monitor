@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
 using Inverter.GoodWe;
 using Inverter.Interfaces;
@@ -10,17 +9,52 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using Serilog;
+using Serilog.Events;
+
 namespace Inverter.Host
 {
     public class Program
     {
         private const string configurationFileBasePath = "configuration";
+        private const string loggingFileBasePath = "logging";
         private const string environmentConfigurationPrefix = "INVERTER_HOST_";
 
-        public static Task Main(string[] args)
+        public static int Main(string[] args)
         {
-            return CreateHostBuilder(args).Build()
-                                          .RunAsync();
+            ILogger logger = BuildLogger();
+
+            try
+            {
+                CreateHostBuilder(args).Build().Run();
+                return 0;
+            }
+            catch(Exception exception)
+            {
+                logger.Fatal(exception, "Host terminated unexpectedly");
+                return 1;
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
+        }
+
+        private static ILogger BuildLogger(LoggingSettings settings = null)
+        {
+            settings ??= new LoggingSettings();
+
+            var configuration = new LoggerConfiguration()
+                                .Enrich.FromLogContext()
+                                .MinimumLevel.Information()
+                                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+
+            if(settings.EnableFileLogging)
+                configuration.WithFileLogging(loggingFileBasePath, settings.FileLoggingSettings);
+            if(settings.EnableConsoleLogging)
+                configuration.WithConsoleLogging(settings.ConsoleLoggingSettings);
+
+            return Log.Logger = configuration.CreateLogger();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -37,14 +71,16 @@ namespace Inverter.Host
                      .ConfigureServices((hostContext, services) =>
                                         {
                                             var settings = Settings.From(hostContext.Configuration);
+                                            var logger = BuildLogger(settings.LoggerSettings);
+                                            services.AddSingleton(logger);
 
                                             var mqttPublisherFactory = new MqttPublisherFactory(settings.MqttPublisherSettings);
                                             var mqttClient = mqttPublisherFactory.ManagedMqttClient().GetAwaiter().GetResult();
 
                                             services.AddSingleton(provider => GoodWeInvertersFactory.Build(settings.GoodWeSettings,
-                                                                                                           new Observe(),
+                                                                                                           new Observe {LogAuthentication = () => logger.Information("Authenticating against GoodWe api")},
                                                                                                            () => DateTimeOffset.UtcNow));
-                                            services.AddTransient<IPublisher>(_ => new ConsolePublisher());
+                                            services.AddTransient<IPublisher, LoggingPublisher>();
                                             services.AddSingleton(provider => mqttPublisherFactory.Build(mqttClient));
                                             services.AddHostedService(provider => new Service(provider.GetService<Inverters>(), provider.GetServices<IPublisher>(), settings.ServiceSettings));
                                         });
