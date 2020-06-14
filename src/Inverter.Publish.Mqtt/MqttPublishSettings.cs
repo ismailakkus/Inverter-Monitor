@@ -2,6 +2,6 @@
 {
     public class MqttPublishSettings
     {
-        public string RootTopic { get; } = "inverters";
+        public string RootTopic { get; set; } = "inverters";
     }
 }

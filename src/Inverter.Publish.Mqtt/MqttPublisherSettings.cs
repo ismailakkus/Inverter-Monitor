@@ -2,7 +2,7 @@
 {
     public class MqttPublisherSettings
     {
-        public MqttConnectionSettings ConnectionSettings { get; } = new MqttConnectionSettings();
-        public MqttPublishSettings PublishSettings { get; } = new MqttPublishSettings();
+        public MqttConnectionSettings ConnectionSettings { get; set; } = new MqttConnectionSettings();
+        public MqttPublishSettings PublishSettings { get; set; } = new MqttPublishSettings();
     }
 }

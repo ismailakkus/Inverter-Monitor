@@ -41,7 +41,7 @@ namespace Inverter.GoodWe
 
             return From(info);
 
-            Measurement From(Invert_Full invertFull)
+            static Measurement From(Invert_Full invertFull)
             {
                 var createdAt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(invertFull.last_time);
                 return new Measurement(createdAt, invertFull.pac, invertFull.tempperature);
@@ -54,10 +54,8 @@ namespace Inverter.GoodWe
 
             return response.data.Select(From).ToList();
 
-            Inverter From(Datum datum)
-            {
-                return new Inverter(datum.powerstation_id);
-            }
+            static Inverter From(Datum datum) 
+                => new Inverter(datum.powerstation_id);
         }
 
         private async Task<PowerStationResponse> PowerStationData(string powerStationId)

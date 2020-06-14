@@ -7,9 +7,9 @@ namespace Inverter.Host
 {
     internal class Settings
     {
-        public GoodWeSettings GoodWeSettings => new GoodWeSettings();
-        public ServiceSettings ServiceSettings => new ServiceSettings();
-        public MqttPublisherSettings MqttPublisherSettings => new MqttPublisherSettings();
+        public GoodWeSettings GoodWeSettings { get; set; } = new GoodWeSettings();
+        public ServiceSettings ServiceSettings { get; set; } = new ServiceSettings();
+        public MqttPublisherSettings MqttPublisherSettings { get; set; } = new MqttPublisherSettings();
 
         public static Settings From(IConfiguration configuration)
         {

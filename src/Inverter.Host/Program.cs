@@ -12,11 +12,11 @@ using Microsoft.Extensions.Hosting;
 
 namespace Inverter.Host
 {
-    //https://github.com/DiedB/Homey-SolarPanels/blob/master/drivers/goodwe/api.js
-    //https://github.com/chkr1011/MQTTnet/wiki/Client
-
     public class Program
     {
+        private const string configurationFileBasePath = "configuration";
+        private const string environmentConfigurationPrefix = "INVERTER_HOST_";
+
         public static Task Main(string[] args)
         {
             return CreateHostBuilder(args).Build()
@@ -28,8 +28,10 @@ namespace Inverter.Host
                      .ConfigureHostConfiguration(builder =>
                                                  {
                                                      builder.SetBasePath(Directory.GetCurrentDirectory());
-                                                     builder.AddYamlFile("configuration.yaml", optional:true);
-                                                     builder.AddEnvironmentVariables(prefix:"host_");
+                                                     builder.AddYamlFile(Path.Combine(configurationFileBasePath, "configuration.yml"), optional:true);
+                                                     builder.AddYamlFile(Path.Combine(configurationFileBasePath, "configuration.yaml"), optional:true);
+                                                     builder.AddJsonFile(Path.Combine(configurationFileBasePath, "configuration.json"), optional:true);
+                                                     builder.AddEnvironmentVariables(prefix:environmentConfigurationPrefix);
                                                      builder.AddCommandLine(args);
                                                  })
                      .ConfigureServices((hostContext, services) =>
@@ -40,7 +42,7 @@ namespace Inverter.Host
                                             var mqttClient = mqttPublisherFactory.ManagedMqttClient().GetAwaiter().GetResult();
 
                                             services.AddSingleton(provider => GoodWeInvertersFactory.Build(settings.GoodWeSettings,
-                                                                                                           new Observe {LogAuthentication = () => Console.WriteLine("authenticating")},
+                                                                                                           new Observe(),
                                                                                                            () => DateTimeOffset.UtcNow));
                                             services.AddTransient<IPublisher>(_ => new ConsolePublisher());
                                             services.AddSingleton(provider => mqttPublisherFactory.Build(mqttClient));

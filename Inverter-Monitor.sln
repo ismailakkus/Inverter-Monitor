@@ -5,11 +5,16 @@ VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inverter.Host", "src\Inverter.Host\Inverter.Host.csproj", "{C47C19E5-C5D8-402B-B345-CB9F5166D828}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inverter.GoodWe", "src\Inverter.GoodWe\Inverter.GoodWe.csproj", "{C00DC35F-8467-469C-9220-7476F2200764}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inverter.GoodWe", "src\Inverter.GoodWe\Inverter.GoodWe.csproj", "{C00DC35F-8467-469C-9220-7476F2200764}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inverter.Publish.Mqtt", "src\Inverter.Publish.Mqtt\Inverter.Publish.Mqtt.csproj", "{0A1E4070-E03F-4CF0-B546-A71A4BE146C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inverter.Publish.Mqtt", "src\Inverter.Publish.Mqtt\Inverter.Publish.Mqtt.csproj", "{0A1E4070-E03F-4CF0-B546-A71A4BE146C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inverter", "src\Inverter\Inverter.csproj", "{F9889E77-9FE5-40AB-9B25-9BC043B2F778}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inverter", "src\Inverter\Inverter.csproj", "{F9889E77-9FE5-40AB-9B25-9BC043B2F778}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{790C49E4-F682-46FB-A7C5-38D2CDDFE3DA}"
+	ProjectSection(SolutionItems) = preProject
+		Dockerfile = Dockerfile
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

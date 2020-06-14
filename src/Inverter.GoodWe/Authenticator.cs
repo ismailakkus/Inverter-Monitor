@@ -32,9 +32,8 @@ namespace Inverter.GoodWe
         public async Task<(Data token, string baseUri)> Authentication()
         {
             var timeToLiveElapsed = _lastUpdated.Add(_settings.AuthenticationTimeToLive) <= _dateTimeProvider();
-            var responseIsEmpty = _response == null;
 
-            if(!responseIsEmpty && !timeToLiveElapsed)
+            if(_response != null && !timeToLiveElapsed)
                 return (_response.data, _response.api);
 
             _authenticate?.Invoke();
@@ -51,7 +50,7 @@ namespace Inverter.GoodWe
                              .ConfigureAwait(false);
             _response = LoginResponse.From(result.Content);
 
-            if (_response.hasError)
+            if(_response.hasError)
                 throw AuthenticationFailed.Create(_response);
 
             return (_response.data, _response.api);
