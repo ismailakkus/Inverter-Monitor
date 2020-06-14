@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 using Inverter.GoodWe.PowerStationData;
@@ -17,18 +16,18 @@ namespace Inverter.GoodWe
     internal class GoodWeRepository : Inverters
     {
         private readonly Func<Task<(Data token, string baseUri)>> _authenticationProvider;
-        private readonly Func<IRestClient> _restClientFactory;
+        private readonly Func<Uri, dynamic, Data, Task<IRestResponse>> _clientExecutionFactory;
 
-        public GoodWeRepository(Func<IRestClient> restClientFactory,
+        public GoodWeRepository(Func<Uri, dynamic, Data, Task<IRestResponse>> clientExecutionFactory,
                                 Func<DateTimeOffset> utcDateTimeNowProvider,
                                 GoodWeSettings settings,
                                 Observe observe)
         {
-            _restClientFactory = restClientFactory;
+            _clientExecutionFactory = clientExecutionFactory;
 
             var authenticator = new Authenticator(settings,
                                                   utcDateTimeNowProvider,
-                                                  Execute,
+                                                  clientExecutionFactory,
                                                   observe.LogAuthentication);
             _authenticationProvider = () => authenticator.Authentication();
         }
@@ -64,7 +63,7 @@ namespace Inverter.GoodWe
 
             const string method = "v1/PowerStation/GetMonitorDetailByPowerstationId";
             var uri = new Uri($"{baseUri}{method}");
-            var response = await Execute(uri, new {powerStationId}, token).ConfigureAwait(false);
+            var response = await _clientExecutionFactory(uri, new {powerStationId}, token).ConfigureAwait(false);
 
             return PowerStationResponse.From(response.Content);
         }
@@ -85,22 +84,9 @@ namespace Inverter.GoodWe
                               powerstation_id = "",
                               powerstation_type = ""
                           };
-            var response = await Execute(uri, payload, token).ConfigureAwait(false);
+            var response = await _clientExecutionFactory(uri, payload, token).ConfigureAwait(false);
 
             return SystemResponse.From(response.Content);
-        }
-
-        private Task<IRestResponse> Execute(Uri uri,
-                                            dynamic data,
-                                            Data authentication)
-        {
-            var request = new RestRequest(uri, Method.POST);
-            request.AddHeader("token", JsonSerializer.Serialize(authentication));
-            request.AddHeader("Content-Type", "application/json");
-            request.AddParameter("application/json",
-                                 JsonSerializer.Serialize(data),
-                                 ParameterType.RequestBody);
-            return _restClientFactory().ExecuteAsync(request);
         }
     }
 }

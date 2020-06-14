@@ -13,7 +13,7 @@ namespace Inverter.GoodWe
         private const int authenticationErrorCode = 100005;
         private readonly Action _authenticate;
         private readonly Func<DateTimeOffset> _dateTimeProvider;
-        private readonly Func<Uri, dynamic, Data, Task<IRestResponse>> _requestFactory;
+        private readonly Func<Uri, dynamic, Data, Task<IRestResponse>> _executeRequest;
         private readonly GoodWeSettings _settings;
 
         private DateTimeOffset _lastUpdated = DateTimeOffset.MinValue;
@@ -21,12 +21,12 @@ namespace Inverter.GoodWe
 
         public Authenticator(GoodWeSettings settings,
                              Func<DateTimeOffset> dateTimeProvider,
-                             Func<Uri, dynamic, Data, Task<IRestResponse>> requestFactory,
+                             Func<Uri, dynamic, Data, Task<IRestResponse>> executeRequest,
                              Action authenticate = null)
         {
             _settings = settings;
             _dateTimeProvider = dateTimeProvider;
-            _requestFactory = requestFactory;
+            _executeRequest = executeRequest;
             _authenticate = authenticate;
         }
 
@@ -45,7 +45,7 @@ namespace Inverter.GoodWe
                               account = _settings.Username,
                               pwd = _settings.Password
                           };
-            var result = await _requestFactory(_settings.AuthenticationUri,
+            var result = await _executeRequest(_settings.AuthenticationUri,
                                                payload,
                                                Data.CreateEmpty)
                              .ConfigureAwait(false);
