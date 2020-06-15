@@ -15,6 +15,11 @@ WORKDIR /source/
 RUN dotnet publish -c release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+
+VOLUME /app/configuration
+VOLUME /app/logging
+
 WORKDIR /app
 COPY --from=build /app ./
+
 ENTRYPOINT ["dotnet", "Inverter.Host.dll"]
