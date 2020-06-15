@@ -11,5 +11,7 @@ namespace Inverter.GoodWe
         public Action LogAuthentication { get; set; }
 
         public Action<DelegateResult<IRestResponse>, int, TimeSpan> OnRetry { get; set; }
+
+        public Action ReAuthenticating { get; set; }
     }
 }

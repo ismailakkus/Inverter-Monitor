@@ -64,7 +64,8 @@ namespace Inverter.Host
                                                                                                            new Observe
                                                                                                            {
                                                                                                                LogAuthentication = () => logger.Information("Authenticating against GoodWe api"),
-                                                                                                               OnRetry = (result, attempt, timeSpan) => logger.Warning("retrying {attempt} {delay}", attempt, timeSpan)
+                                                                                                               OnRetry = (result, attempt, timeSpan) => logger.Warning("retrying {attempt} {delay}", attempt, timeSpan),
+                                                                                                               ReAuthenticating = () => logger.Warning("Re-authenticating")
                                                                                                            },
                                                                                                            () => DateTimeOffset.UtcNow));
                                             services.AddTransient<IPublisher, LoggingPublisher>();

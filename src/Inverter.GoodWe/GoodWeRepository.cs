@@ -15,8 +15,9 @@ namespace Inverter.GoodWe
 {
     internal class GoodWeRepository : Inverters
     {
-        private readonly Func<Task<(Data token, string baseUri)>> _authenticationProvider;
+        private readonly Authenticator _authenticator;
         private readonly Func<Uri, dynamic, Data, Task<IRestResponse>> _clientExecutionFactory;
+        private readonly Observe _observe;
 
         public GoodWeRepository(Func<Uri, dynamic, Data, Task<IRestResponse>> clientExecutionFactory,
                                 Func<DateTimeOffset> utcDateTimeNowProvider,
@@ -24,12 +25,12 @@ namespace Inverter.GoodWe
                                 Observe observe)
         {
             _clientExecutionFactory = clientExecutionFactory;
+            _observe = observe;
 
-            var authenticator = new Authenticator(settings,
-                                                  utcDateTimeNowProvider,
-                                                  clientExecutionFactory,
-                                                  observe.LogAuthentication);
-            _authenticationProvider = () => authenticator.Authentication();
+            _authenticator = new Authenticator(settings,
+                                               utcDateTimeNowProvider,
+                                               clientExecutionFactory,
+                                               observe.LogAuthentication);
         }
 
         public async Task<Measurement> LatestMeasurement(InverterId id)
@@ -59,18 +60,23 @@ namespace Inverter.GoodWe
 
         private async Task<PowerStationResponse> PowerStationData(string powerStationId)
         {
-            var (token, baseUri) = await _authenticationProvider().ConfigureAwait(false);
+            var (token, baseUri) = await _authenticator.Authenticate().ConfigureAwait(false);
 
             const string method = "v1/PowerStation/GetMonitorDetailByPowerstationId";
             var uri = new Uri($"{baseUri}{method}");
             var response = await _clientExecutionFactory(uri, new {powerStationId}, token).ConfigureAwait(false);
 
-            return PowerStationResponse.From(response.Content);
+            if(!ShouldReAuthenticate(response.Content))
+                return PowerStationResponse.From(response.Content);
+
+            _observe.ReAuthenticating?.Invoke();
+            _authenticator.ForceAuthentication();
+            return await PowerStationData(powerStationId);
         }
 
         private async Task<SystemResponse> GetPowerStationData()
         {
-            var (token, baseUri) = await _authenticationProvider().ConfigureAwait(false);
+            var (token, baseUri) = await _authenticator.Authenticate().ConfigureAwait(false);
 
             const string method = "PowerStationMonitor/QueryPowerStationMonitorForApp";
             var uri = new Uri($"{baseUri}{method}");
@@ -86,7 +92,18 @@ namespace Inverter.GoodWe
                           };
             var response = await _clientExecutionFactory(uri, payload, token).ConfigureAwait(false);
 
-            return SystemResponse.From(response.Content);
+            if(!ShouldReAuthenticate(response.Content))
+                return SystemResponse.From(response.Content);
+
+            _observe.ReAuthenticating?.Invoke();
+            _authenticator.ForceAuthentication();
+            return await GetPowerStationData();
+        }
+
+        private static bool ShouldReAuthenticate(string response)
+        {
+            const string reAuthenticateCode = "100002";
+            return response.Contains(reAuthenticateCode);
         }
     }
 }

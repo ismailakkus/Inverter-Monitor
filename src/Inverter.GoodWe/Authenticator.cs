@@ -11,6 +11,7 @@ namespace Inverter.GoodWe
     internal class Authenticator
     {
         private const int authenticationErrorCode = 100005;
+
         private readonly Action _authenticate;
         private readonly Func<DateTimeOffset> _dateTimeProvider;
         private readonly Func<Uri, dynamic, Data, Task<IRestResponse>> _executeRequest;
@@ -30,13 +31,21 @@ namespace Inverter.GoodWe
             _authenticate = authenticate;
         }
 
-        public async Task<(Data token, string baseUri)> Authentication()
+        private bool _forceAuthenticate = false;
+
+        public void ForceAuthentication()
+        {
+            _forceAuthenticate = true;
+        }
+
+        public async Task<(Data token, string baseUri)> Authenticate()
         {
             var timeToLiveElapsed = _lastUpdated.Add(_settings.AuthenticationTimeToLive) <= _dateTimeProvider();
 
-            if(_response != null && !timeToLiveElapsed)
+            if(!_forceAuthenticate && _response != null && !timeToLiveElapsed)
                 return (_response.data, _response.api);
 
+            _forceAuthenticate = false;
             _authenticate?.Invoke();
 
             _lastUpdated = _dateTimeProvider();
