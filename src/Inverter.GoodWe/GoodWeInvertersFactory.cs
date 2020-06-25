@@ -9,6 +9,6 @@ namespace Inverter.GoodWe
         public static Inverters Build(GoodWeSettings settings,
                                       Observe observe,
                                       Func<DateTimeOffset> utcDateTimeNow)
-            => new GoodWeRepository(new ResilientRestClient(observe.OnRetry).Execute, utcDateTimeNow, settings, observe);
+            => new GoodWeRepository(new ResilientRestClient(settings.RequireValidSslCertificate, observe.OnRetry).Execute, utcDateTimeNow, settings, observe);
     }
 }

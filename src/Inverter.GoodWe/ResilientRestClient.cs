@@ -29,9 +29,17 @@ namespace Inverter.GoodWe
         private readonly IRestClient _restClient;
         private readonly AsyncRetryPolicy<IRestResponse> _result;
 
-        public ResilientRestClient(Action<DelegateResult<IRestResponse>, int, TimeSpan> onRetry = null)
+        public ResilientRestClient(bool requireValidSslCertificate = false, 
+                                   Action<DelegateResult<IRestResponse>, int, TimeSpan> onRetry = null)
         {
             _restClient = new RestClient();
+
+            if(!requireValidSslCertificate)
+                _restClient.RemoteCertificateValidationCallback = (sender,
+                                                                   certificate,
+                                                                   chain,
+                                                                   sslPolicyErrors) => true;
+
             _result = Policy.Handle<HttpRequestException>()
                             .OrResult<IRestResponse>(r => _httpStatusCodesWorthRetrying.Contains(r.StatusCode))
                             .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),

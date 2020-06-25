@@ -10,6 +10,8 @@ namespace Inverter.GoodWe
         public Uri AuthenticationUri { get; set; }
             = new Uri("https://globalapi.sems.com.cn/api/v1/Common/CrossLogin");
 
+        public bool RequireValidSslCertificate { get; set; }
+
         public TimeSpan AuthenticationTimeToLive { get; set; } = TimeSpan.FromHours(1);
     }
 }

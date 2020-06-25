@@ -31,7 +31,7 @@ namespace Inverter.GoodWe
             _authenticate = authenticate;
         }
 
-        private bool _forceAuthenticate = false;
+        private bool _forceAuthenticate;
 
         public void ForceAuthentication()
         {
@@ -58,6 +58,10 @@ namespace Inverter.GoodWe
                                                payload,
                                                Data.CreateEmpty)
                              .ConfigureAwait(false);
+
+            if(!result.IsSuccessful)
+                throw AuthenticationFailed.Create(result);
+
             _response = LoginResponse.From(result.Content);
 
             if(_response.hasError || _response.code == authenticationErrorCode)
