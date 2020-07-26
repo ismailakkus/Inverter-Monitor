@@ -43,8 +43,20 @@ namespace Inverter.GoodWe
 
             static Measurement From(Invert_Full invertFull)
             {
+                var fault = FromFault(invertFull.fault_messge);
                 var createdAt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(invertFull.last_time);
-                return new Measurement(createdAt, invertFull.pac, invertFull.tempperature);
+                return new Measurement(createdAt,
+                    invertFull.pac,
+                    invertFull.tempperature,
+                    fault);
+            }
+
+            static Fault? FromFault(float fault)
+            {
+                if(fault == 0)
+                    return null;
+
+                return Fault.Unknown;
             }
         }
 

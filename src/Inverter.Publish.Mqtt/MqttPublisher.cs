@@ -31,11 +31,13 @@ namespace Inverter.Publish.Mqtt
             var messages = new List<MqttApplicationMessage>
                            {
                                Create($"{_settings.RootTopic}/{inverter.Id}/temperature",
-                                      measurement.Temperature.ToString(CultureInfo.InvariantCulture)),
+                                   measurement.Temperature.ToString(CultureInfo.InvariantCulture)),
                                Create($"{_settings.RootTopic}/{inverter.Id}/power",
-                                      measurement.Power.ToString(CultureInfo.InvariantCulture)),
+                                   measurement.Power.ToString(CultureInfo.InvariantCulture)),
                                Create($"{_settings.RootTopic}/{inverter.Id}/creationDateTime",
-                                      measurement.CreatedAt.ToString("o"))
+                                   measurement.CreatedAt.ToString("o")),
+                               Create($"{_settings.RootTopic}/{inverter.Id}/fault",
+                                   measurement.Fault.HasValue.ToString())
                            };
 
             try
